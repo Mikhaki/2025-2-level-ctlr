@@ -12,7 +12,7 @@ except ImportError:
 
 if __name__ == "__main__":
     # Step 1. GET request
-    url = "https://www.nn.ru/"
+    url = "https://theatre-library.ru/authors/s/smolnikov_konstantin"
     response = requests.get(url)
     print(f"Status code: {response.status_code}")
     print(f"First 500 chars:\n{response.text[:500]}...")
