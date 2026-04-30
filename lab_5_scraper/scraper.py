@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup, Tag
 from core_utils.article.article import Article
 from core_utils.config_dto import ConfigDTO
 
+
 class IncorrectSeedURLError(Exception):
     pass
 
@@ -80,19 +81,40 @@ class Config:
         self._config_dto = self._extract_config_content()
 
         if not isinstance(self._config_dto.seed_urls, str):
-            raise IncorrectSeedURLError('seed URL does not match standard pattern "https?://(www.)?"')
-        if self._config_dto.total_articles > 150:
-            raise NumberOfArticlesOutOfRangeError("total number of articles is out of range from 1 to 150")
+            raise IncorrectSeedURLError(
+                'seed URL does not match standard pattern "https?://(www.)?"'
+                )
+        
         if not isinstance(self._config_dto.total_articles, int):
-            raise IncorrectNumberOfArticlesError("total number of articles to parse is not integer or less than 0")
+            raise IncorrectNumberOfArticlesError(
+                "total number of articles to parse is not integer or less than 0"
+                )
+        if self._config_dto.total_articles < 1 or self._config_dto.total_articles > 150:
+            raise NumberOfArticlesOutOfRangeError(
+                "total number of articles is out of range from 1 to 150"
+                )
+        
         if not isinstance(self._config_dto.headers, dict):
-            raise IncorrectHeadersError("headers are not in a form of dictionary")
+            raise IncorrectHeadersError(
+                "headers are not in a form of dictionary"
+                )
+        
         if not isinstance(self._config_dto.encoding, str):
-            raise IncorrectEncodingError("encoding must be specified as a string")
-        if not isinstance(self._config_dto.timeout, int) or self._config_dto.timeout < 60:
-            raise IncorrectTimeoutError("timeout value must be a positive integer less than 60")
-        if not isinstance(self._config_dto.should_verify_certificate, bool):
-            raise IncorrectVerifyError("verify certificate and headless mode values must either be True or False")
+            raise IncorrectEncodingError(
+                "encoding must be specified as a string"
+                )
+        
+        if [not isinstance(self._config_dto.timeout, int)
+            or not 1 < self._config_dto.timeout < 60]:
+            raise IncorrectTimeoutError(
+                "timeout value must be a positive integer less than 60"
+                )
+        
+        if [not isinstance(self._config_dto.should_verify_certificate, bool)
+            or not isinstance(self._config_dto.headless_mode, bool)]:
+            raise IncorrectVerifyError(
+                "verify certificate and headless mode values must either be True or False"
+                )
 
     def get_seed_urls(self) -> list[str]:
         """
@@ -101,6 +123,7 @@ class Config:
         Returns:
             list[str]: Seed urls
         """
+        return self._config_dto.seed_urls
 
     def get_num_articles(self) -> int:
         """
@@ -109,6 +132,7 @@ class Config:
         Returns:
             int: Total number of articles to scrape
         """
+        return self._config_dto.total_articles
 
     def get_headers(self) -> dict[str, str]:
         """
@@ -117,6 +141,7 @@ class Config:
         Returns:
             dict[str, str]: Headers
         """
+        return self._config_dto.headers
 
     def get_encoding(self) -> str:
         """
@@ -125,6 +150,7 @@ class Config:
         Returns:
             str: Encoding
         """
+        return self._config_dto.encoding
 
     def get_timeout(self) -> int:
         """
@@ -133,6 +159,7 @@ class Config:
         Returns:
             int: Number of seconds to wait for response
         """
+        return self._config_dto.timeout
 
     def get_verify_certificate(self) -> bool:
         """
@@ -141,6 +168,7 @@ class Config:
         Returns:
             bool: Whether to verify certificate or not
         """
+        return self._config_dto.should_verify_certificate
 
     def get_headless_mode(self) -> bool:
         """
@@ -149,6 +177,7 @@ class Config:
         Returns:
             bool: Whether to use headless mode or not
         """
+        return self._config_dto.headless_mode
 
 
 def make_request(url: str, config: Config) -> requests.models.Response:
