@@ -17,7 +17,7 @@ def main() -> None:
     """
     Entrypoint for a seminar's listing
     """
-    article_url = "https://bold-vest.ru/articles/1888-maiak-dlia-mnogix-pokolenii"
+    article_url = "http://teatr-lib.ru/"
     response = requests.get(article_url)
 
     # 1. Creating instance of soup
@@ -31,8 +31,8 @@ def main() -> None:
         print(f"Title text: {soup.title.text}")
 
     # 3. Finding tags by their name
-    all_spans = soup.find_all("span")
-    print(f"Number of spans: {len(all_spans)}")
+    all_divs = soup.find_all("span")
+    print(f"Number of divs: {len(all_divs)}")
 
     # 4. Finding elements by their class
     header = soup.find_all(class_="header")
