@@ -7,12 +7,14 @@ import datetime
 import json
 import pathlib
 import re
+import shutil
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
 from core_utils.article.article import Article
 from core_utils.config_dto import ConfigDTO
+from core_utils.constants import ASSETS_PATH, CRAWLER_CONFIG_PATH
 
 
 class IncorrectSeedURLError(Exception):
@@ -50,8 +52,8 @@ class Config:
             path_to_config (pathlib.Path): Path to configuration.
         """
         self.path_to_config = path_to_config
-        self.config_content = self._extract_config_content()
         self._validate_config_content()
+        
 
 
     def _extract_config_content(self) -> ConfigDTO:
@@ -127,6 +129,12 @@ class Config:
             raise IncorrectVerifyError(
                 "verify certificate and headless mode values must either be True or False"
                 )
+        self._seed_urls = self._config_dto.seed_urls
+        self._num_articles = self._config_dto.total_articles
+        self._headers = self._config_dto.headers
+        self._encoding = self._config_dto.encoding
+        self._timeout = self._config_dto.timeout
+        self._should_verify_certificate = self._config_dto.should_verify_certificate
 
     def get_seed_urls(self) -> list[str]:
         """
@@ -203,6 +211,14 @@ def make_request(url: str, config: Config) -> requests.models.Response:
     Returns:
         requests.models.Response: A response from a request
     """
+    response = requests.get(
+        url,
+        headers = config.get_headers(),
+        timeout = config.get_timeout(),
+        verify = config.get_verify_certificate()
+    )
+    response.encoding = config.get_encoding()
+    return response
 
 
 class Crawler:
@@ -220,6 +236,10 @@ class Crawler:
         Args:
             config (Config): Configuration
         """
+        self.config = config
+        self.urls: list[str] = []
+        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/.*')
+
 
     def _extract_url(self, article_bs: Tag) -> str:
         """
@@ -231,11 +251,36 @@ class Crawler:
         Returns:
             str: Url from HTML
         """
+        href = article_bs.get('href')
+        if not href:
+            return ''
+        if href.startswith('/'):
+            base = self.config.get_seed_urls()[0].rstrip('/')
+            full_url = base + href
+        else:
+            full_url = href
+        return full_url
+
 
     def find_articles(self) -> None:
         """
         Find articles.
         """
+        needed = self.config.get_num_articles()
+        for seed in self.config.get_seed_urls():
+            if len(self.urls) >= needed:
+                break
+            try:
+                response = make_request(seed, self.config)
+                soup = BeautifulSoup(response.text, 'html.parser')
+                links = soup.find_all('a', href=re.compile(r'/Library/'))
+                for link in links:
+                    url = self._extract_url(link)
+                    if url and self.url_pattern.match(url) and url not in self.urls:
+                        self.urls.append(url)
+            except Exception as e:
+                print(f"Not processed {seed}: {e}")
+
 
     def get_search_urls(self) -> list:
         """
@@ -244,6 +289,7 @@ class Crawler:
         Returns:
             list: seed_urls param
         """
+        return self.config.get_seed_urls()
 
 
 # 10
@@ -331,12 +377,20 @@ def prepare_environment(base_path: pathlib.Path | str) -> None:
     Args:
         base_path (pathlib.Path | str): Path where articles stores
     """
+    path = pathlib.Path(base_path)
+    if path.exists():
+        shutil.rmtree(path)
+        path.mkdir(parents=True)
 
 
 def main() -> None:
     """
     Entrypoint for scraper module.
     """
+    configuration = Config(path_to_config=CRAWLER_CONFIG_PATH)
+    prepare_environment(ASSETS_PATH)
+    crawler = Crawler(config=configuration)
+    
 
 
 if __name__ == "__main__":
