@@ -50,7 +50,7 @@ class Config:
             path_to_config (pathlib.Path): Path to configuration.
         """
         self.path_to_config = path_to_config
-        self.config_content = self._extract_config_content
+        self.config_content = self._extract_config_content()
         self._validate_config_content()
 
 
@@ -80,8 +80,14 @@ class Config:
         """
         self._config_dto = self._extract_config_content()
 
-        if not isinstance(self._config_dto.seed_urls, str):
+        if not isinstance(self._config_dto.seed_urls, list):
             raise IncorrectSeedURLError(
+                'seed URL does not match standard pattern "https?://(www.)?"'
+                )
+        url_pattern = re.compile(r"^https?://(www\.)?")
+        for url in self._config_dto.seed_urls:
+            if not isinstance(url, str) or not url_pattern.match(url):
+                raise IncorrectSeedURLError(
                 'seed URL does not match standard pattern "https?://(www.)?"'
                 )
         
@@ -89,7 +95,11 @@ class Config:
             raise IncorrectNumberOfArticlesError(
                 "total number of articles to parse is not integer or less than 0"
                 )
-        if self._config_dto.total_articles < 1 or self._config_dto.total_articles > 150:
+        if  self._config_dto.total_articles < 1:
+            raise IncorrectNumberOfArticlesError(
+                "total number of articles is out of range from 1 to 150"
+                )
+        if self._config_dto.total_articles > 150:
             raise NumberOfArticlesOutOfRangeError(
                 "total number of articles is out of range from 1 to 150"
                 )
@@ -104,14 +114,16 @@ class Config:
                 "encoding must be specified as a string"
                 )
         
-        if [not isinstance(self._config_dto.timeout, int)
-            or not 1 < self._config_dto.timeout < 60]:
+        if not isinstance(self._config_dto.timeout, int) or not 0 < self._config_dto.timeout < 60:
             raise IncorrectTimeoutError(
                 "timeout value must be a positive integer less than 60"
                 )
         
-        if [not isinstance(self._config_dto.should_verify_certificate, bool)
-            or not isinstance(self._config_dto.headless_mode, bool)]:
+        if not isinstance(self._config_dto.should_verify_certificate, bool):
+            raise IncorrectVerifyError(
+                "verify certificate and headless mode values must either be True or False"
+                )
+        if not isinstance(self._config_dto.headless_mode, bool):
             raise IncorrectVerifyError(
                 "verify certificate and headless mode values must either be True or False"
                 )
