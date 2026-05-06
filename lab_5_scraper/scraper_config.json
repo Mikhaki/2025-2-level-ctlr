@@ -1,6 +1,6 @@
 {
     "seed_urls": [],
-    "headers": {},
+    "headers": {"User-Agent": "Mozilla/5.0"},
     "total_articles_to_find_and_parse": 1,
     "encoding": "",
     "timeout": 1,

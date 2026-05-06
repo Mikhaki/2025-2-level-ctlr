@@ -13,6 +13,7 @@ import requests
 from bs4 import BeautifulSoup, Tag
 
 from core_utils.article.article import Article
+from urllib.parse import urljoin
 from core_utils.config_dto import ConfigDTO
 from core_utils.constants import ASSETS_PATH, CRAWLER_CONFIG_PATH
 
@@ -52,7 +53,15 @@ class Config:
             path_to_config (pathlib.Path): Path to configuration.
         """
         self.path_to_config = path_to_config
+        config_dto = self._extract_config_content()
         self._validate_config_content()
+        self._seed_urls = config_dto.seed_urls
+        self._num_articles = config_dto.total_articles
+        self._headers = config_dto.headers
+        self._encoding = config_dto.encoding
+        self._timeout = config_dto.timeout
+        self._should_verify_certificate = config_dto.should_verify_certificate
+        self._headless_mode = config_dto.headless_mode
         
 
 
@@ -238,7 +247,7 @@ class Crawler:
         """
         self.config = config
         self.urls: list[str] = []
-        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/.*')
+        # self.url_pattern = re.compile(r'^https?://(teatr-lib\.ru|theatre-library\.ru)/.*')
 
 
     def _extract_url(self, article_bs: Tag) -> str:
@@ -254,12 +263,7 @@ class Crawler:
         href = article_bs.get('href')
         if not href:
             return ''
-        if href.startswith('/'):
-            base = self.config.get_seed_urls()[0].rstrip('/')
-            full_url = base + href
-        else:
-            full_url = href
-        return full_url
+        return href
 
 
     def find_articles(self) -> None:
@@ -272,14 +276,17 @@ class Crawler:
                 break
             try:
                 response = make_request(seed, self.config)
+                if response.status_code != 200:
+                    continue
+                self._current_base = seed
                 soup = BeautifulSoup(response.text, 'html.parser')
-                links = soup.find_all('a', href=re.compile(r'/Library/'))
-                for link in links:
+                all_links = soup.find_all('a', href=True)
+                for link in all_links:
                     url = self._extract_url(link)
                     if url and self.url_pattern.match(url) and url not in self.urls:
                         self.urls.append(url)
-            except Exception as e:
-                print(f"Not processed {seed}: {e}")
+            except Exception:
+                continue
 
 
     def get_search_urls(self) -> list:
@@ -381,6 +388,7 @@ def prepare_environment(base_path: pathlib.Path | str) -> None:
     if path.exists():
         shutil.rmtree(path)
         path.mkdir(parents=True)
+    
 
 
 def main() -> None:
