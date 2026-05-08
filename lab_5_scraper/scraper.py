@@ -406,7 +406,7 @@ def prepare_environment(base_path: pathlib.Path | str) -> None:
     path = pathlib.Path(base_path)
     if path.exists():
         shutil.rmtree(path)
-        path.mkdir(parents=True, exist_ok=True)
+    path.mkdir(parents=True, exist_ok=True)
 
 
 
