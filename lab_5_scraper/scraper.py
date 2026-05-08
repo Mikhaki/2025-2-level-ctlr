@@ -406,7 +406,7 @@ def prepare_environment(base_path: pathlib.Path | str) -> None:
     path = pathlib.Path(base_path)
     if path.exists():
         shutil.rmtree(path)
-        path.mkdir(parents=True)
+        path.mkdir(parents=True, exist_ok=True)
 
 
 
@@ -422,7 +422,7 @@ def main() -> None:
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
         if article:
-            to_raw(article, ASSETS_PATH)
+            to_raw(article)
 
 
 if __name__ == "__main__":
