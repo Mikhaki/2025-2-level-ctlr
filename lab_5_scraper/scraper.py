@@ -65,7 +65,7 @@ class Config:
         self._timeout = config_dto.timeout
         self._should_verify_certificate = config_dto.should_verify_certificate
         self._headless_mode = config_dto.headless_mode
-        
+
 
 
     def _extract_config_content(self) -> ConfigDTO:
@@ -77,7 +77,7 @@ class Config:
         """
         with open(self.path_to_config, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         return ConfigDTO(**data)
 
     def _validate_config_content(self) -> None:
@@ -87,36 +87,35 @@ class Config:
         self._config_dto = self._extract_config_content()
 
         if not isinstance(self._config_dto.seed_urls, list):
-            raise IncorrectSeedURLError
-        
+            raise IncorrectSeedURLError()
+
         url_pattern = re.compile(r"^https?://(www\.)?")
         for url in self._config_dto.seed_urls:
             if not isinstance(url, str) or not url_pattern.match(url):
                 raise IncorrectSeedURLError()
-        
-        
+
         if not isinstance(self._config_dto.total_articles, int):
-            raise IncorrectNumberOfArticlesError()        
+            raise IncorrectNumberOfArticlesError()
         if  self._config_dto.total_articles < 1:
-            raise IncorrectNumberOfArticlesError()        
+            raise IncorrectNumberOfArticlesError()
         if self._config_dto.total_articles > 150:
             raise NumberOfArticlesOutOfRangeError()
-        
+
         if not isinstance(self._config_dto.headers, dict):
             raise IncorrectHeadersError()
-        
+
         if not isinstance(self._config_dto.encoding, str):
             raise IncorrectEncodingError()
-        
+
         if not isinstance(self._config_dto.timeout, int) or not 0 < self._config_dto.timeout < 60:
             raise IncorrectTimeoutError()
-        
+
         if not isinstance(self._config_dto.should_verify_certificate, bool):
             raise IncorrectVerifyError()
-        
+
         if not isinstance(self._config_dto.headless_mode, bool):
             raise IncorrectVerifyError()
-        
+
         # do not use next lines!!!
         # self._seed_urls = self._config_dto.seed_urls
         # self._num_articles = self._config_dto.total_articles
@@ -365,7 +364,7 @@ class HTMLParser:
             else:
                 self.article.date = datetime.datetime.now()
 
-       
+
     def unify_date_format(self, date_str: str) -> datetime.datetime:
         """
         Unify date format.
@@ -408,7 +407,7 @@ def prepare_environment(base_path: pathlib.Path | str) -> None:
     if path.exists():
         shutil.rmtree(path)
         path.mkdir(parents=True)
-    
+
 
 
 def main() -> None:
@@ -423,7 +422,7 @@ def main() -> None:
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
         if article:
-            to_raw(article, ASSETS_PATH)    
+            to_raw(article)
 
 
 if __name__ == "__main__":
