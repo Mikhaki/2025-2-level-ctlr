@@ -6,17 +6,17 @@ Crawler implementation.
 import datetime
 import json
 import pathlib
+import random
 import re
 import shutil
 import time
-import random
 from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
 from core_utils.article.article import Article
-from core_utils.article.io import to_raw, to_meta
+from core_utils.article.io import to_meta, to_raw
 from core_utils.config_dto import ConfigDTO
 from core_utils.constants import ASSETS_PATH, CRAWLER_CONFIG_PATH
 
