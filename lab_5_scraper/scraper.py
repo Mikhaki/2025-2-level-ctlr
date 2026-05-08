@@ -422,7 +422,7 @@ def main() -> None:
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
         if article:
-            to_raw(article)
+            to_raw(article, ASSETS_PATH)
 
 
 if __name__ == "__main__":
