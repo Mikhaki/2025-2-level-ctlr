@@ -234,7 +234,7 @@ class Crawler:
         """
         self.config = config
         self.urls: list[str] = []
-        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/[\w\-/]+/?$')
+        self.url_pattern = re.compile(r'^https?://(www\.)?teatr-lib\.ru/Library/[\w\-/]+/?$')
         self._current_base = ""
 
     def _extract_url(self, article_bs: Tag) -> str:
@@ -259,7 +259,7 @@ class Crawler:
         for seed in self.config.get_seed_urls():
             if len(self.urls) >= needed:
                 break
-            time.sleep(random.uniform(0.2, 1.5))
+            time.sleep(random.uniform(0.2, 0.5))
             try:
                 response = make_request(seed, self.config)
             except requests.exceptions.RequestException:
@@ -389,16 +389,22 @@ class HTMLParser:
         Returns:
             Article | bool: Article instance, False in case of request error
         """
+        self.article.text = ""
+        self.article.title = "Ошибка загрузки"
+        self.article.date = datetime.datetime.now()
+
         try:
             response = make_request(self.full_url, self.config)
-            if response.status_code != 200:
-                return False
-            soup = BeautifulSoup(response.text, 'lxml')
-            self._fill_article_with_text(soup)
-            self._fill_article_with_meta_information(soup)
-            return self.article
-        except Exception:
-            return False
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.text, 'lxml')
+                self._fill_article_with_text(soup)
+                self._fill_article_with_meta_information(soup)
+            else:
+                print(f"Non-200 status {response.status_code} for {self.full_url}")
+        except requests.exceptions.RequestException as e:
+            print(f"Request error for {self.full_url}: {e}")
+
+        return self.article
 
 
 def prepare_environment(base_path: pathlib.Path | str) -> None:
@@ -426,8 +432,7 @@ def main() -> None:
     for idx, url in enumerate(crawler.urls[:configuration.get_num_articles()], start=1):
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
-        if article:
-            to_raw(article)
+        to_raw(article)
 
 
 if __name__ == "__main__":
