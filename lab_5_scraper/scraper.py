@@ -368,15 +368,27 @@ class HTMLParser:
         """
         title_tag = article_soup.find('h1')
         self.article.title = title_tag.get_text(strip=True) if title_tag else "No heading"
-        date_tag = article_soup.find('time')
-        if date_tag and date_tag.get('datetime'):
-            self.article.date = self.unify_date_format(date_tag['datetime'])
-        else:
-            meta_date = article_soup.find('meta', {'name': 'date'})
-            if meta_date and meta_date.get('content'):
-                self.article.date = self.unify_date_format(meta_date['content'])
-            else:
-                self.article.date = datetime.datetime.now()
+        author = ["NOT FOUND"]
+        if article_soup.title and article_soup.title.string:
+            full_title = article_soup.title.string.strip()
+            if "." in full_title:
+                parts = full_title.split(".", 1)
+                candidate = parts[0].strip()
+                if candidate and len(candidate) < len(full_title):
+                    author = candidate
+        self.article.author = [author]
+
+        # date_tag = article_soup.find('time')
+        # if date_tag and date_tag.get('datetime'):
+        #     self.article.date = self.unify_date_format(date_tag['datetime'])
+        # else:
+        #     meta_date = article_soup.find('meta', {'name': 'date'})
+        #     if meta_date and meta_date.get('content'):
+        #         self.article.date = self.unify_date_format(meta_date['content'])
+        #     else:
+        #         self.article.date = datetime.datetime.now()
+
+
 
 
     def unify_date_format(self, date_str: str) -> datetime.datetime:
@@ -389,6 +401,7 @@ class HTMLParser:
         Returns:
             datetime.datetime: Datetime object
         """
+        
         return datetime.datetime.now()
 
     def parse(self) -> Article | bool:
