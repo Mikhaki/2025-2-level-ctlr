@@ -259,7 +259,7 @@ class Crawler:
         for seed in self.config.get_seed_urls():
             if len(self.urls) >= needed:
                 break
-            time.sleep(random.uniform(0.5, 3.0))
+            time.sleep(random.uniform(0.2, 1.5))
             try:
                 response = make_request(seed, self.config)
             except requests.exceptions.RequestException:
@@ -307,6 +307,7 @@ class CrawlerRecursive(Crawler):
         """
         Find number of article urls requested.
         """
+        
 
 
 # 4, 6, 8, 10
@@ -356,19 +357,17 @@ class HTMLParser:
         Args:
             article_soup (bs4.BeautifulSoup): BeautifulSoup instance
         """
-        try:
-            title_tag = article_soup.find('h1')
-            self.article.title = title_tag.get_text(strip=True)
-            date_tag = article_soup.find('time')
-            if date_tag:
-                date_str = date_tag.get('datetime') or date_tag.get_text(strip=True)
-                self.article.date = self.unify_date_format(date_str)
+        title_tag = article_soup.find('h1')
+        self.article.title = title_tag.get_text(strip=True)
+        date_tag = article_soup.find('time')
+        if date_tag and date_tag.get('datetime'):
+            self.article.date = self.unify_date_format(date_tag['datetime'])
+        else:
+            meta_date = article_soup.find('meta', {'name': 'date'})
+            if meta_date and meta_date.get('content'):
+                self.article.date = self.unify_date_format(meta_date['content'])
             else:
-                meta_date = article_soup.find('meta', {'name': 'date'})
-                if meta_date and meta_date.get('content'):
-                    self.article.date = self.unify_date_format(meta_date['content'])
-        except Exception:
-            self.article.date = datetime.datetime.now()
+                self.article.date = datetime.datetime.now()
 
 
     def unify_date_format(self, date_str: str) -> datetime.datetime:
