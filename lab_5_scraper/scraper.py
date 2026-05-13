@@ -262,15 +262,10 @@ class Crawler:
             time.sleep(random.uniform(0.5, 3.0))
             try:
                 response = make_request(seed, self.config)
-            except Exception:
-                    continue
-            if response.status_code != 200:
+            except requests.exceptions.RequestException:
                 continue
             self._current_base = seed
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-            except Exception:
-                continue
+            soup = BeautifulSoup(response.text, 'lxml')
             all_links = soup.find_all('a', href=True)
             for link in all_links:
                 url = self._extract_url(link)
