@@ -401,7 +401,7 @@ class HTMLParser:
                 self._fill_article_with_meta_information(soup)
             else:
                 print(f"Non-200 status {response.status_code} for {self.full_url}")
-        except requests.exceptions.RequestException as e:
+        except Exception as e:
             print(f"Request error for {self.full_url}: {e}")
         return self.article
 
