@@ -343,11 +343,11 @@ class HTMLParser:
         """
         paragraphs = article_soup.find_all('p')
         if paragraphs:
-            text = ' '.join(p.get_text(strip=True) for p in paragraphs)
+            text_parts = [p.get_text(strip=True) for p in paragraphs if p.get_text(strip=True)]
+            self.article.text = '\n\n'.join(text_parts)
         else:
             body = article_soup.find('body')
-            text = body.get_text(separator=' ', strip=True) if body else ''
-        self.article.text = text
+            self.article.text = ' '.join(body.get_text().split()) if body else ''
 
     def _fill_article_with_meta_information(self, article_soup: BeautifulSoup) -> None:
         """
