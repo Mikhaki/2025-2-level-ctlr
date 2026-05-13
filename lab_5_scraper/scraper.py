@@ -248,6 +248,8 @@ class Crawler:
             str: Url from HTML
         """
         href = article_bs.get('href')
+        if not href or not isinstance(href, str):
+            return ""
         return urljoin(self._current_base, href) if href else ""
 
 
@@ -256,26 +258,30 @@ class Crawler:
         Find articles.
         """
         needed = self.config.get_num_articles()
-        for seed in self.config.get_seed_urls():
-            if len(self.urls) >= needed:
-                break
-            time.sleep(random.uniform(0.5, 3.0))
-            try:
-                response = make_request(seed, self.config)
-            except Exception:
+        queue = list(self.config.get_seed_urls())
+        visited = set()
+
+        while queue and len(self.urls) < needed:
+            url = queue.pop(0)
+            if url in visited:
                 continue
-            if response.status_code != 200:
+            visited.add(url)
+
+            response = make_request(url, self.config)
+            if not response or response.status_code != 200:
                 continue
-            self._current_base = seed
-            try:
-                soup = BeautifulSoup(response.text, 'html.parser')
-            except Exception:
-                continue
-            all_links = soup.find_all('a', href=True)
-            for link in all_links:
-                url = self._extract_url(link)
-                if url and self.url_pattern.match(url) and url not in self.urls:
-                    self.urls.append(url)
+
+            soup = BeautifulSoup(response.content, 'html.parser')
+            self._current_base = url
+
+            for link in soup.find_all('a', href=True):
+                full_url = self._extract_url(link)
+                if not full_url:
+                    continue
+                if full_url not in self.urls and len(self.urls) < needed:
+                    self.urls.append(full_url)
+                if full_url not in visited and len(self.urls) < needed:
+                    queue.append(full_url)
 
 
     def get_search_urls(self) -> list:
@@ -399,7 +405,7 @@ class HTMLParser:
         try:
             response = make_request(self.full_url, self.config)
             if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
+                soup = BeautifulSoup(response.text, 'lxml')
                 self._fill_article_with_text(soup)
                 self._fill_article_with_meta_information(soup)
             else:
