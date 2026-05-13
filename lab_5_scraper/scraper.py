@@ -264,6 +264,8 @@ class Crawler:
                 response = make_request(seed, self.config)
             except requests.exceptions.RequestException:
                 continue
+            if not response.ok:
+                continue
             self._current_base = seed
             soup = BeautifulSoup(response.text, 'lxml')
             all_links = soup.find_all('a', href=True)
