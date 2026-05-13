@@ -268,7 +268,7 @@ class Crawler:
                 continue
             self._current_base = seed
             try:
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
             except Exception:
                 continue
             all_links = soup.find_all('a', href=True)
@@ -399,7 +399,7 @@ class HTMLParser:
         try:
             response = make_request(self.full_url, self.config)
             if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'lxml')
+                soup = BeautifulSoup(response.text, 'html.parser')
                 self._fill_article_with_text(soup)
                 self._fill_article_with_meta_information(soup)
             else:
