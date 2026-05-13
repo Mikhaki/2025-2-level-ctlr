@@ -378,15 +378,15 @@ class HTMLParser:
                     author = candidate
         self.article.author = [author]
 
-        # date_tag = article_soup.find('time')
-        # if date_tag and date_tag.get('datetime'):
-        #     self.article.date = self.unify_date_format(date_tag['datetime'])
-        # else:
-        #     meta_date = article_soup.find('meta', {'name': 'date'})
-        #     if meta_date and meta_date.get('content'):
-        #         self.article.date = self.unify_date_format(meta_date['content'])
-        #     else:
-        #         self.article.date = datetime.datetime.now()
+        date_tag = article_soup.find('time')
+        if date_tag and date_tag.get('datetime'):
+            self.article.date = self.unify_date_format(date_tag['datetime'])
+        else:
+            meta_date = article_soup.find('meta', {'name': 'date'})
+            if meta_date and meta_date.get('content'):
+                self.article.date = self.unify_date_format(meta_date['content'])
+            else:
+                self.article.date = datetime.datetime.now()
 
 
 
@@ -454,6 +454,7 @@ def main() -> None:
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
         to_raw(article)
+        to_meta(article)
 
 
 if __name__ == "__main__":
