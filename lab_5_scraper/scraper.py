@@ -234,8 +234,7 @@ class Crawler:
         """
         self.config = config
         self.urls: list[str] = []
-        self.url_pattern = re.compile(r'^https?://(www\.)?teatr-lib\.ru/Library/[\w\-/]+/?$')
-        self._current_base = ""
+        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/[\w\-/]+/?$')        self._current_base = ""
 
     def _extract_url(self, article_bs: Tag) -> str:
         """
@@ -259,7 +258,7 @@ class Crawler:
         for seed in self.config.get_seed_urls():
             if len(self.urls) >= needed:
                 break
-            time.sleep(random.uniform(0.2, 0.5))
+            time.sleep(random.uniform(0.5, 3.0))
             try:
                 response = make_request(seed, self.config)
             except requests.exceptions.RequestException:
@@ -390,7 +389,7 @@ class HTMLParser:
             Article | bool: Article instance, False in case of request error
         """
         self.article.text = ""
-        self.article.title = "Downloading error"
+        self.article.title = "ERROR"
         self.article.date = datetime.datetime.now()
 
         try:
