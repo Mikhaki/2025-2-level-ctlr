@@ -234,7 +234,8 @@ class Crawler:
         """
         self.config = config
         self.urls: list[str] = []
-        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/[\w\-/]+/?$')        self._current_base = ""
+        self.url_pattern = re.compile(r'^https?://teatr-lib\.ru/Library/[\w\-/]+/?$')
+        self._current_base = ""
 
     def _extract_url(self, article_bs: Tag) -> str:
         """
