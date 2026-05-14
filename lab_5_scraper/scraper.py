@@ -293,7 +293,6 @@ class Crawler:
                 if any(full_url.lower().endswith(ext) for ext in skip_extensions):
                     continue
 
-                # ИСКЛЮЧАЕМ МОДАЛЬНЫЕ СТРАНИЦЫ
                 if '/modal/' in full_url or full_url.endswith('_i.htm'):
                     continue
 
