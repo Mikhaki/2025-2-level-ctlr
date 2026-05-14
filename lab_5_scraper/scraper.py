@@ -8,6 +8,7 @@ import json
 import pathlib
 import re
 import shutil
+import time
 from urllib.parse import urljoin
 
 import requests
@@ -279,30 +280,36 @@ class Crawler:
             if not response or response.status_code != 200:
                 continue
 
-            soup = BeautifulSoup(response.content, 'lxml')
+            soup = BeautifulSoup(response.content, 'html.parser')
             self._current_base = url
 
             for link in soup.find_all('a', href=True):
                 if len(self.urls) >= needed:
                     break
+
                 full_url = self._extract_url(link)
                 if not full_url:
                     continue
                 if any(full_url.lower().endswith(ext) for ext in skip_extensions):
                     continue
 
-                if '/Library/' not in full_url:
+                # ИСКЛЮЧАЕМ МОДАЛЬНЫЕ СТРАНИЦЫ
+                if '/modal/' in full_url or full_url.endswith('_i.htm'):
                     continue
 
-                link_text = link.get_text(strip=True).lower()
-                if link_text != 'читать':
-                    continue
-
-                if full_url not in self.urls and len(self.urls) < needed:
+                if full_url not in self.urls:
                     self.urls.append(full_url)
+                    print(f"  Found article #{len(self.urls)}: {full_url}")
 
                 if full_url not in visited and len(self.urls) < needed:
                     queue.append(full_url)
+
+            import random
+            delay = random.uniform(0.5, 3.0)
+            print(f"Sleeping for {delay:.2f} seconds...")
+            time.sleep(delay)
+
+        print(f"Crawling finished. Collected {len(self.urls)} URLs.")
 
     def get_search_urls(self) -> list:
         """
