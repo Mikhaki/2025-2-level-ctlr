@@ -429,7 +429,17 @@ class HTMLParser:
             else:
                 self.article.date = datetime.datetime.now()
 
-
+        topics = []
+        meta_keywords = article_soup.find('meta', {'name': 'keywords'})
+        if meta_keywords and meta_keywords.get('content'):
+            keywords = meta_keywords['content'].strip()
+            topics = [kw.strip() for kw in re.split(r'[,;]\s*', keywords) if kw.strip()]
+        if not topics:
+            meta_tags = article_soup.find_all('meta', {'property': 'article:tag'})
+            for tag in meta_tags:
+                if tag.get('content'):
+                    topics.append(tag['content'].strip())
+        self.article.topics = topics
 
 
     def unify_date_format(self, date_str: str) -> datetime.datetime:
@@ -442,8 +452,19 @@ class HTMLParser:
         Returns:
             datetime.datetime: Datetime object
         """
-        
-        return datetime.datetime.now()
+        result = self._parse_russian_date(date_str)
+        if result is None:
+            formats = [
+                '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d',
+                '%d/%m/%Y', '%m/%d/%Y', '%B %d, %Y', '%d %B %Y', '%d.%m.%Y'
+            ]
+            for fmt in formats:
+                try:
+                    result = datetime.datetime.strptime(date_str[:len(fmt)], fmt)
+                    break
+                except ValueError:
+                    continue
+        return result
 
     def parse(self) -> Article | bool:
         """
