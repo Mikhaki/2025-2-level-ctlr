@@ -100,19 +100,19 @@ class Config:
         self._config_dto = self._extract_config_content()
 
         if not isinstance(self._config_dto.seed_urls, list):
-            raise IncorrectSeedURLError('seed URL does not match standard pattern "https?://(www.)?"')
+            raise IncorrectSeedURLError('seed URL does not match standard pattern')
 
         url_pattern = re.compile(r"^https?://(www\.)?")
         for url in self._config_dto.seed_urls:
             if not isinstance(url, str) or not url_pattern.match(url):
-                raise IncorrectSeedURLError('seed URL does not match standard pattern "https?://(www.)?"')
+                raise IncorrectSeedURLError('seed URL does not match standard pattern')
 
         if not isinstance(self._config_dto.total_articles, int):
-            raise IncorrectNumberOfArticlesError('seed URL does not match standard pattern "https?://(www.)?"')
+            raise IncorrectNumberOfArticlesError('seed URL does not match standard pattern')
         if  self._config_dto.total_articles < 1:
-            raise IncorrectNumberOfArticlesError("total number of articles is out of range from 1 to 150")
+            raise IncorrectNumberOfArticlesError("total number of articles is out of range")
         if self._config_dto.total_articles > 150:
-            raise NumberOfArticlesOutOfRangeError("total number of articles is out of range from 1 to 150")
+            raise NumberOfArticlesOutOfRangeError("total number of articles is out of range")
 
         if not isinstance(self._config_dto.headers, dict):
             raise IncorrectHeadersError("headers are not in a form of dictionary")
@@ -124,10 +124,10 @@ class Config:
             raise IncorrectTimeoutError("timeout value must be a positive integer less than 60")
 
         if not isinstance(self._config_dto.should_verify_certificate, bool):
-            raise IncorrectVerifyError("verify certificate and headless mode values must either be True or False")
+            raise IncorrectVerifyError("should_verify_certificate must be boolean")
 
         if not isinstance(self._config_dto.headless_mode, bool):
-            raise IncorrectVerifyError("verify certificate and headless mode values must either be True or False")
+            raise IncorrectVerifyError("should_verify_certificate must be boolean")
 
 
 
@@ -342,7 +342,7 @@ class CrawlerRecursive(Crawler):
         """
         Find number of article urls requested.
         """
-        
+
 
 
 # 4, 6, 8, 10
@@ -376,7 +376,10 @@ class HTMLParser:
         """
         paragraphs = article_soup.find_all('p')
         if paragraphs:
-            text_parts = [p.get_text(strip=True, separator=' ') for p in paragraphs if p.get_text(strip=True, separator=' ')]
+            text_parts = [
+                p.get_text(strip=True, separator=' ') for p in paragraphs
+                if p.get_text(strip=True, separator=' ')
+                ]
             self.article.text = '\n\n'.join(text_parts)
         else:
             body = article_soup.find('body')
@@ -421,11 +424,11 @@ class HTMLParser:
 
         date_tag = article_soup.find('time')
         if date_tag and date_tag.get('datetime'):
-            self.article.date = self.unify_date_format(date_tag['datetime'])
+            self.article.date = self.unify_date_format(str(date_tag['datetime']))
         else:
             meta_date = article_soup.find('meta', {'name': 'date'})
             if meta_date and meta_date.get('content'):
-                self.article.date = self.unify_date_format(meta_date['content'])
+                self.article.date = self.unify_date_format(str(meta_date['content']))
             else:
                 self.article.date = datetime.datetime.now()
 
