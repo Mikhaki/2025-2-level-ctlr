@@ -6,11 +6,9 @@ Crawler implementation.
 import datetime
 import json
 import pathlib
-import random
 import re
 import shutil
-import time
-from urllib.parse import urljoin, unquote
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup, Tag
