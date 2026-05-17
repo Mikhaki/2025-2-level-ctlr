@@ -377,58 +377,55 @@ class HTMLParser:
             else:
                 self.article.text = ''
 
-    def _fill_article_with_meta_information(self, article_soup: BeautifulSoup) -> None:
-        """
-        Find meta information of article.
-
-        Args:
-            article_soup (bs4.BeautifulSoup): BeautifulSoup instance
-        """
-        raw_title = (
-            article_soup.title
-            and article_soup.title.string
-            and article_soup.title.string.strip()) or ""
-        if raw_title:
+    def _extract_title(self, article_soup: BeautifulSoup) -> str:
+        if article_soup.title and article_soup.title.string:
+            raw_title = article_soup.title.string.strip()
             for sep in ['|', '–', '—', '::', '-', '»']:
                 if sep in raw_title:
                     raw_title = raw_title.split(sep)[0].strip()
                     break
-        self.article.title = raw_title.strip() if raw_title else "No heading"
+            return raw_title.strip()
+        return "No heading"
 
-        author = ["NOT FOUND"]
+    def _extract_author(self, article_soup: BeautifulSoup) -> list[str]:
         meta_author = article_soup.find('meta', {'name': 'author'})
         if meta_author and meta_author.get('content'):
-            author = [meta_author['content'].strip()]
-        elif article_soup.title and article_soup.title.string:
+            return [meta_author['content'].strip()]
+        if article_soup.title and article_soup.title.string:
             full_title = article_soup.title.string.strip()
             if "." in full_title:
-                parts = full_title.split(".", 1)
-                candidate = parts[0].strip()
+                candidate = full_title.split(".", 1)[0].strip()
                 if candidate and len(candidate) < len(full_title):
-                    author = [candidate]
-        self.article.author = author
+                    return [candidate]
+        return ["NOT FOUND"]
 
+    def _extract_date(self, article_soup: BeautifulSoup) -> datetime.datetime:
         date_tag = article_soup.find('time')
-        meta_date = article_soup.find('meta', {'name': 'date'})
         if date_tag and date_tag.get('datetime'):
-            self.article.date = self.unify_date_format(str(date_tag['datetime']))
-        elif meta_date and meta_date.get('content'):
-            self.article.date = self.unify_date_format(str(meta_date['content']))
-        else:
-            self.article.date = datetime.datetime.now()
+            return self.unify_date_format(str(date_tag['datetime']))
+        meta_date = article_soup.find('meta', {'name': 'date'})
+        if meta_date and meta_date.get('content'):
+            return self.unify_date_format(str(meta_date['content']))
+        return datetime.datetime.now()
 
-        topics = []
+    def _extract_topics(self, article_soup: BeautifulSoup) -> list[str]:
         meta_keywords = article_soup.find('meta', {'name': 'keywords'})
         if meta_keywords and meta_keywords.get('content'):
             keywords = meta_keywords['content'].strip()
             topics = [kw.strip() for kw in re.split(r'[,;]\s*', keywords) if kw.strip()]
-        if not topics:
-            topics = [
-                tag['content'].strip()
-                for tag in article_soup.find_all('meta', {'property': 'article:tag'})
-                if tag.get('content')
-                ]
-        self.article.topics = topics
+            if topics:
+                return topics
+        return [
+            tag['content'].strip()
+            for tag in article_soup.find_all('meta', {'property': 'article:tag'})
+            if tag.get('content')
+        ]
+
+    def _fill_article_with_meta_information(self, article_soup: BeautifulSoup) -> None:
+        self.article.title = self._extract_title(article_soup)
+        self.article.author = self._extract_author(article_soup)
+        self.article.date = self._extract_date(article_soup)
+        self.article.topics = self._extract_topics(article_soup)
 
 
     def unify_date_format(self, date_str: str) -> datetime.datetime:
