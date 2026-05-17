@@ -6,6 +6,7 @@ Crawler implementation.
 import datetime
 import json
 import pathlib
+import random
 import re
 import shutil
 import time
@@ -206,18 +207,14 @@ def make_request(url: str, config: Config) -> requests.models.Response:
     Returns:
         requests.models.Response: A response from a request
     """
-    try:
-        response = requests.get(
-            url,
-            headers=config.get_headers(),
-            timeout=config.get_timeout(),
-            verify=config.get_verify_certificate()
-        )
-        response.encoding = config.get_encoding()
-        return response
-    except Exception as e:
-        print(f"Request error for {url}: {e}")
-        return None
+    response = requests.get(
+        url,
+        headers=config.get_headers(),
+        timeout=config.get_timeout(),
+        verify=config.get_verify_certificate()
+    )
+    response.encoding = config.get_encoding()
+    return response
 
 
 class Crawler:
@@ -265,9 +262,7 @@ class Crawler:
         queue = list(self.config.get_seed_urls())
         visited = set()
 
-        skip_extensions = {'.rar', '.zip', '.pdf', '.doc', '.docx', '.xls', '.xlsx',
-                        '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.mp3', '.mp4',
-                        '.avi', '.mov', '.exe', '.msi', '.tar', '.gz', '.7z'}
+        skip_extensions = {'.rar', '.zip', '.7z'}
 
         while queue and len(self.urls) < needed:
             url = queue.pop(0)
@@ -275,12 +270,12 @@ class Crawler:
                 continue
             visited.add(url)
 
-            print(f"Crawling: {url}")
-            response = make_request(url, self.config)
-            if not response or response.status_code != 200:
+            try:
+                response = make_request(url, self.config)
+            except Exception:
                 continue
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            soup = BeautifulSoup(response.content, 'lxml')
             self._current_base = url
 
             for link in soup.find_all('a', href=True):
@@ -288,27 +283,21 @@ class Crawler:
                     break
 
                 full_url = self._extract_url(link)
-                if not full_url:
-                    continue
-                if any(full_url.lower().endswith(ext) for ext in skip_extensions):
-                    continue
-
-                if '/modal/' in full_url or full_url.endswith('_i.htm'):
+                if (not full_url
+                        or any(full_url.lower().endswith(ext) for ext in skip_extensions)
+                        or '/modal/' in full_url
+                        or full_url.endswith('_i.htm')
+                    ):
                     continue
 
                 if full_url not in self.urls:
                     self.urls.append(full_url)
-                    print(f"  Found article #{len(self.urls)}: {full_url}")
 
                 if full_url not in visited and len(self.urls) < needed:
                     queue.append(full_url)
 
-            import random
-            delay = random.uniform(0.5, 3.0)
-            print(f"Sleeping for {delay:.2f} seconds...")
-            time.sleep(delay)
+            time.sleep(random.uniform(0.5, 3.0))
 
-        print(f"Crawling finished. Collected {len(self.urls)} URLs.")
 
     def get_search_urls(self) -> list:
         """
@@ -342,7 +331,6 @@ class CrawlerRecursive(Crawler):
         """
         Find number of article urls requested.
         """
-
 
 
 # 4, 6, 8, 10
@@ -407,7 +395,6 @@ class HTMLParser:
             title = "No heading"
         title = title.strip()
         self.article.title = title
-        print(f"DEBUG: {self.full_url} -> title='{title}'")
 
         author = ["NOT FOUND"]
         meta_author = article_soup.find('meta', {'name': 'author'})
@@ -438,10 +425,8 @@ class HTMLParser:
             keywords = meta_keywords['content'].strip()
             topics = [kw.strip() for kw in re.split(r'[,;]\s*', keywords) if kw.strip()]
         if not topics:
-            meta_tags = article_soup.find_all('meta', {'property': 'article:tag'})
-            for tag in meta_tags:
-                if tag.get('content'):
-                    topics.append(tag['content'].strip())
+            tags = article_soup.find_all('meta', {'property': 'article:tag'})
+            topics = [tag['content'].strip() for tag in tags if tag.get('content')]
         self.article.topics = topics
 
 
@@ -455,19 +440,13 @@ class HTMLParser:
         Returns:
             datetime.datetime: Datetime object
         """
-        result = self._parse_russian_date(date_str)
-        if result is None:
-            formats = [
-                '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d',
-                '%d/%m/%Y', '%m/%d/%Y', '%B %d, %Y', '%d %B %Y', '%d.%m.%Y'
-            ]
-            for fmt in formats:
-                try:
-                    result = datetime.datetime.strptime(date_str[:len(fmt)], fmt)
-                    break
-                except ValueError:
-                    continue
-        return result
+        date_str = date_str.strip()
+        for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d", "%d.%m.%Y", "%d/%m/%Y"):
+            try:
+                return datetime.datetime.strptime(date_str, fmt)
+            except ValueError:
+                continue
+        return datetime.datetime.now()
 
     def parse(self) -> Article | bool:
         """
@@ -478,30 +457,23 @@ class HTMLParser:
         """
         try:
             response = make_request(self.full_url, self.config)
-            if response is None:
-                print(f"No response for {self.full_url}")
-                self.article.text = "ERROR: No response"
-                self.article.title = "ERROR"
-                self.article.author = ["ERROR"]
-                self.article.date = datetime.datetime.now()
-                return self.article
-
-            if response.status_code == 200:
-                soup = BeautifulSoup(response.text, 'html.parser')
-                self._fill_article_with_text(soup)
-                self._fill_article_with_meta_information(soup)
-            else:
-                print(f"HTTP {response.status_code} for {self.full_url}")
-                self.article.text = f"ERROR: HTTP {response.status_code}"
-                self.article.title = "ERROR"
-                self.article.author = ["ERROR"]
-                self.article.date = datetime.datetime.now()
-        except Exception as e:
-            print(f"Exception parsing {self.full_url}: {e}")
-            self.article.text = f"ERROR: {e}"
+        except requests.RequestException:
+            self.article.text = "ERROR: No response"
             self.article.title = "ERROR"
             self.article.author = ["ERROR"]
             self.article.date = datetime.datetime.now()
+            return self.article
+
+        if response.status_code != 200:
+            self.article.text = f"ERROR: HTTP {response.status_code}"
+            self.article.title = "ERROR"
+            self.article.author = ["ERROR"]
+            self.article.date = datetime.datetime.now()
+            return self.article
+
+        soup = BeautifulSoup(response.text, 'html.parser')
+        self._fill_article_with_text(soup)
+        self._fill_article_with_meta_information(soup)
         return self.article
 
 
@@ -530,11 +502,14 @@ def main() -> None:
     for idx, url in enumerate(crawler.urls[:configuration.get_num_articles()], start=1):
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
-        try:
-            to_raw(article)
-            to_meta(article)
-        except Exception as e:
-            print(f"Failed to save article {idx}: {e}")
+        if isinstance(article, Article):
+            try:
+                to_raw(article)
+                to_meta(article)
+            except Exception as e:
+                print(f"Failed to save article {idx}: {e}")
+        else:
+            print(f"Article {idx} parsing failed, skipping save")
 
 
 if __name__ == "__main__":
