@@ -262,7 +262,6 @@ class Crawler:
         queue = list(self.config.get_seed_urls())
         visited = set()
 
-        skip_extensions = {'.rar', '.zip', '.7z'}
 
         while queue and len(self.urls) < needed:
             url = queue.pop(0)
@@ -284,7 +283,7 @@ class Crawler:
 
                 full_url = self._extract_url(link)
                 if (not full_url
-                        or any(full_url.lower().endswith(ext) for ext in skip_extensions)
+                        or any(full_url.lower().endswith(ext) for ext in ['.rar', '.zip', '.7z'])
                         or '/modal/' in full_url
                         or full_url.endswith('_i.htm')
                     ):
@@ -326,6 +325,7 @@ class CrawlerRecursive(Crawler):
         Args:
             config (Config): Configuration
         """
+        super().__init__(config)
 
     def find_articles(self) -> None:
         """
@@ -503,13 +503,8 @@ def main() -> None:
         parser = HTMLParser(full_url=url, article_id=idx, config=configuration)
         article = parser.parse()
         if isinstance(article, Article):
-            try:
-                to_raw(article)
-                to_meta(article)
-            except Exception as e:
-                print(f"Failed to save article {idx}: {e}")
-        else:
-            print(f"Article {idx} parsing failed, skipping save")
+            to_raw(article)
+            to_meta(article)
 
 
 if __name__ == "__main__":
