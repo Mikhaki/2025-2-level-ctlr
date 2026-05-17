@@ -271,7 +271,7 @@ class Crawler:
 
             try:
                 response = make_request(url, self.config)
-            except Exception:
+            except requests.RequestException:
                 continue
 
             soup = BeautifulSoup(response.content, 'lxml')
@@ -326,6 +326,7 @@ class CrawlerRecursive(Crawler):
             config (Config): Configuration
         """
         super().__init__(config)
+        self.start_url = self.config.get_seed_urls()[0]
 
     def find_articles(self) -> None:
         """
@@ -425,8 +426,11 @@ class HTMLParser:
             keywords = meta_keywords['content'].strip()
             topics = [kw.strip() for kw in re.split(r'[,;]\s*', keywords) if kw.strip()]
         if not topics:
-            tags = article_soup.find_all('meta', {'property': 'article:tag'})
-            topics = [tag['content'].strip() for tag in tags if tag.get('content')]
+            topics = [
+                tag['content'].strip()
+                for tag in article_soup.find_all('meta', {'property': 'article:tag'})
+                if tag.get('content')
+                ]
         self.article.topics = topics
 
 
