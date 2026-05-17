@@ -384,18 +384,16 @@ class HTMLParser:
         Args:
             article_soup (bs4.BeautifulSoup): BeautifulSoup instance
         """
-        title = None
-        if article_soup.title and article_soup.title.string:
-            raw_title = article_soup.title.string.strip()
+        raw_title = (
+            article_soup.title
+            and article_soup.title.string
+            and article_soup.title.string.strip()) or ""
+        if raw_title:
             for sep in ['|', '–', '—', '::', '-', '»']:
                 if sep in raw_title:
                     raw_title = raw_title.split(sep)[0].strip()
                     break
-            title = raw_title
-        if not title:
-            title = "No heading"
-        title = title.strip()
-        self.article.title = title
+        self.article.title = raw_title.strip() if raw_title else "No heading"
 
         author = ["NOT FOUND"]
         meta_author = article_soup.find('meta', {'name': 'author'})
@@ -411,14 +409,13 @@ class HTMLParser:
         self.article.author = author
 
         date_tag = article_soup.find('time')
+        meta_date = article_soup.find('meta', {'name': 'date'})
         if date_tag and date_tag.get('datetime'):
             self.article.date = self.unify_date_format(str(date_tag['datetime']))
+        elif meta_date and meta_date.get('content'):
+            self.article.date = self.unify_date_format(str(meta_date['content']))
         else:
-            meta_date = article_soup.find('meta', {'name': 'date'})
-            if meta_date and meta_date.get('content'):
-                self.article.date = self.unify_date_format(str(meta_date['content']))
-            else:
-                self.article.date = datetime.datetime.now()
+            self.article.date = datetime.datetime.now()
 
         topics = []
         meta_keywords = article_soup.find('meta', {'name': 'keywords'})
