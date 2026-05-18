@@ -422,6 +422,12 @@ class HTMLParser:
         ]
 
     def _fill_article_with_meta_information(self, article_soup: BeautifulSoup) -> None:
+        """
+        Find meta information of article.
+
+        Args:
+            article_soup (bs4.BeautifulSoup): BeautifulSoup instance
+        """
         self.article.title = self._extract_title(article_soup)
         self.article.author = self._extract_author(article_soup)
         self.article.date = self._extract_date(article_soup)
