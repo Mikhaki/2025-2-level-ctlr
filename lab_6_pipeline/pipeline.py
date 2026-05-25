@@ -3,18 +3,34 @@ Pipeline for CONLL-U formatting.
 """
 
 # pylint: disable=too-few-public-methods, unused-import, undefined-variable, too-many-nested-blocks, duplicate-code
+import json
 import pathlib
+import re
+from typing import cast
 
-
+import networkx as nx
+import spacy_udpipe
 from networkx import DiGraph
+from networkx.algorithms.isomorphism import DiGraphMatcher
 from spacy.language import Language
 from spacy.tokens import Doc
+from spacy_conll import init_parser
+from spacy_conll.parser import ConllParser
 
-from core_utils.article.article import Article, get_article_id_from_filepath
+from core_utils.article.article import (
+    Article,
+    ArtifactType,
+    get_article_id_from_filepath,
+)
+from core_utils.article.io import from_meta, from_raw, to_cleaned, to_meta
+from core_utils.constants import ASSETS_PATH, PROJECT_ROOT
+from core_utils.pipeline import (
+    LibraryWrapper,
+    PipelineProtocol,
+    TreeNode,
+)
+from core_utils.visualizer import visualize
 
-from core_utils.pipeline import LibraryWrapper, PipelineProtocol, TreeNode
-from core_utils.constants import ASSETS_PATH
-from core_utils.article.io import from_raw, to_cleaned, from_meta
 
 class EmptyDirectoryError(Exception):
     """
