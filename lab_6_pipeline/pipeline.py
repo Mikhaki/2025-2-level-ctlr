@@ -122,17 +122,12 @@ class CorpusManager:
                 raise InconsistentDatasetError(
                     f"Raw file {file.name} is empty"
                 )
-        for file in meta_files.values():
-            if file.stat().st_size == 0:
-                raise InconsistentDatasetError(
-                    f"Meta file {file.name} is empty"
-                )
-        
-        if set(raw_files.keys()) != set(meta_files.keys()):
-            raise InconsistentDatasetError(
-                "Raw and meta ids are unequal."
-            )
-        return None
+        if meta_files:
+            for file in meta_files.values():
+                if file.stat().st_size == 0:
+                    raise InconsistentDatasetError(f"Meta file {file.name} is empty")
+            if set(raw_files.keys()) != set(meta_files.keys()):
+                raise InconsistentDatasetError("Raw and meta ids are unequal.")
 
 
     def _scan_dataset(self) -> None:
