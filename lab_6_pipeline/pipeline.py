@@ -2,15 +2,18 @@
 Pipeline for CONLL-U formatting.
 """
 
-# pylint: disable=too-few-public-methods, unused-import, undefined-variable, too-many-nested-blocks
-import json
+# pylint: disable=too-few-public-methods, unused-import, undefined-variable, too-many-nested-blocks, duplicate-code
 import pathlib
 
+<<<<<<< HEAD
 from networkx import DiGraph
 from spacy import Language
 from spacy.tokens import Doc
 
 from core_utils.article.article import Article, get_article_id_from_filepath
+=======
+from core_utils.article.article import Article
+>>>>>>> 55158917e97f62d289e3428246a39cfbd83b7e1e
 from core_utils.pipeline import LibraryWrapper, PipelineProtocol, TreeNode
 from core_utils.constants import ASSETS_PATH
 from core_utils.article.io import from_raw, to_cleaned, from_meta
@@ -25,6 +28,21 @@ class InconsistentDatasetError(Exception):
     """
     Raised when the dataset has structural issues (missing files, gaps, etc.).
     """
+
+try:
+    from networkx import DiGraph
+    from networkx.algorithms.isomorphism import DiGraphMatcher
+except ImportError:
+    DiGraph = None  # type: ignore
+    print("No libraries installed. Failed to import.")
+
+try:
+    from spacy.language import Language
+    from spacy.tokens import Doc
+except ImportError:
+    Language = None  # type: ignore
+    Doc = None  # type: ignore
+    print("No libraries installed. Failed to import.")
 
 
 class CorpusManager:
