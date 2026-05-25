@@ -75,7 +75,6 @@ class CorpusManager:
             raise FileNotFoundError(
                 "Path does not exist."
             )
-
         if not self.path_to_raw_txt_data.is_dir():
             raise NotADirectoryError(
                 "Path does not lead to a directory."
@@ -92,31 +91,28 @@ class CorpusManager:
         for file in files:
             name = file.name
             if name.endswith("_raw.txt"):
-                id_str = name.replace("_raw.txt", "")
-                id = int(id_str)
-                raw_files[id] = file
-            if name.endswith("_meta.json"):
-                id_str = name.replace("_meta.json", "")
-                id = int(id_str)
-                meta_files[id] = file
+                raw_files[int(name.replace("_raw.txt", ""))] = file
+            elif name.endswith("_meta.json"):
+                meta_files[int(name.replace("_meta.json", ""))] = file
+
         if not raw_files:
             raise InconsistentDatasetError(
                 "Dataset contains no raw files."
             )
-        if not meta_files:
-            raise InconsistentDatasetError(
-                "Dataset contains no meta files."
-            )
+        # if not meta_files:
+        #     raise InconsistentDatasetError(
+        #         "Dataset contains no meta files."
+        #     )
 
-        raw_ids = set(raw_files.keys())
-        meta_ids = set(meta_files.keys())
-        if raw_ids != meta_ids:
-            raise InconsistentDatasetError(
-                "Raw and meta ids are unequal."
-            )
+        # raw_ids = set(raw_files.keys())
+        # meta_ids = set(meta_files.keys())
+        # if raw_ids != meta_ids:
+        #     raise InconsistentDatasetError(
+        #         "Raw and meta ids are unequal."
+        #     )
 
-        ids = sorted(raw_files.keys())
-        if ids != list(range(1, max(ids) + 1)):
+        raw_ids = sorted(raw_files.keys())
+        if raw_ids != list(range(1, max(raw_ids) + 1)):
             raise InconsistentDatasetError(
                 "IDs contain slips."
             )
