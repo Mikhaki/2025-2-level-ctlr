@@ -115,7 +115,8 @@ class CorpusManager:
                 "Raw and meta ids are unequal."
             )
 
-        if raw_ids != set(range(1, max(raw_ids) + 1)):
+        ids = sorted(raw_files.keys())
+        if ids != list(range(1, max(ids) + 1)):
             raise InconsistentDatasetError(
                 "IDs contain slips."
             )
