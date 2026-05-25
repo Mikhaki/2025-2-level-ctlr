@@ -6,7 +6,6 @@ Pipeline for CONLL-U formatting.
 
 import pathlib
 
-
 from core_utils.article.article import (
     Article,
     get_article_id_from_filepath,
@@ -25,10 +24,14 @@ class EmptyDirectoryError(Exception):
     Raised when directory is empty.
     """
 
-
 class InconsistentDatasetError(Exception):
     """
     Raised when the dataset has structural issues (missing files, gaps, etc.).
+    """
+
+class EmptyFileError(Exception):
+    """
+    Raised when a file is empty.
     """
 
 try:
