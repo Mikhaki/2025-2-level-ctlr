@@ -22,6 +22,7 @@ from core_utils.pipeline import (
     TreeNode,
 )
 import spacy_udpipe
+from spacy.tokens import Doc
 from spacy_conll import init_parser
 
 MODEL_PATH = PROJECT_ROOT / "lab_6_pipeline" / "assets" / "model"
@@ -206,7 +207,28 @@ class UDPipeAnalyzer(LibraryWrapper):
             Language: Analyzer instance
         """
         nlp = spacy_udpipe.load("ru")
-        nlp = init_parser(nlp, "conllu")
+        config = {
+            "field_names": {
+                "ID": "ID",
+                "FORM": "FORM",
+                "LEMMA": "LEMMA",
+                "UPOS": "UPOS",
+                "XPOS": "XPOS",
+                "FEATS": "FEATS",
+                "HEAD": "HEAD",
+                "DEPREL": "DEPREL",
+                "DEPS": "DEPS",
+                "MISC": "MISC",
+            },
+            "conversion_maps": {"XPOS": {"": "_"}},
+            "include_headers": True,
+            "disable_pandas": True,
+        }
+        if "conll_formatter" in nlp.pipe_names:
+            nlp.remove_pipe("conll_formatter")
+        nlp.add_pipe("conll_formatter", config=config, last=True)
+        if not Doc.has_extension("conllu"):
+            Doc.set_extension("conllu", getter=lambda doc: doc._.conll)
         return nlp
 
 
@@ -220,11 +242,7 @@ class UDPipeAnalyzer(LibraryWrapper):
         Returns:
             list[str]: List of documents
         """
-        conllu_docs = []
-        for text in texts:
-            doc = self._analyzer(text)
-            conllu_docs.append(doc._.conllu)
-        return conllu_docs
+        return [self._analyzer(text)._.conll_str + '\n' for text in texts]
 
     def to_conllu(self, article: Article) -> None:
         """
