@@ -6,6 +6,7 @@ Pipeline for CONLL-U formatting.
 
 import os
 import pathlib
+import re
 from typing import cast
 
 from core_utils.article.article import (
@@ -93,49 +94,51 @@ class CorpusManager:
                 "Directory is empty."
                 )
 
-        raw_files = {}
-        meta_files = {}
-        for file in files:
-            name = file.name
-            if name.endswith("_raw.txt"):
-                raw_files[int(name.replace("_raw.txt", ""))] = file
-            elif name.endswith("_meta.json"):
-                meta_files[int(name.replace("_meta.json", ""))] = file
-
-        if not raw_files:
-            raise InconsistentDatasetError(
-                "Dataset contains no raw files."
-            )
-
-        raw_ids = sorted(raw_files.keys())
-        if raw_ids != list(range(1, max(raw_ids) + 1)):
-            raise InconsistentDatasetError(
-                "IDs contain slips."
-            )
-        
-        for file in raw_files.values():
-            if file.stat().st_size == 0:
+        found_raw = []
+        found_meta = []
+        for raw_path in self.path_to_raw_txt_data.glob("*_raw.txt"):
+            raw_name = raw_path.name
+            if not raw_path.stat().st_size or not re.match(r"\d*_raw\.txt", raw_name):
                 raise InconsistentDatasetError(
-                    f"Raw file {file.name} is empty"
+                    f"File is empty: {raw_name}"
                 )
-        if meta_files:
-            for file in meta_files.values():
-                if file.stat().st_size == 0:
-                    raise InconsistentDatasetError(f"Meta file {file.name} is empty")
-            if set(raw_files.keys()) != set(meta_files.keys()):
-                raise InconsistentDatasetError("Raw and meta ids are unequal.")
+            found_raw.append(int(raw_name.split("_")[0]))
+        for meta_path in self.path_to_raw_txt_data.glob("*_meta.json"):
+            meta_name = meta_path.name
+            if not meta_path.stat().st_size or not re.match(r"\d*_meta\.json", meta_name):
+                raise InconsistentDatasetError(
+                    f"File is empty: {meta_name}"
+                )
+            found_meta.append(int(meta_name.split("_")[0]))
 
+        if not found_meta or not found_raw:
+            raise EmptyDirectoryError(
+                "Directory is empty"
+            )
+        if len(found_meta) != len(found_raw):
+            raise InconsistentDatasetError(
+                "Number of meta and raw files is unequal"
+            )
+
+        for id_raw, file_id in enumerate(sorted(found_raw), start=1):
+            if id_raw != file_id:
+                raise InconsistentDatasetError(
+                    "Raw file IDs contain slips"
+                )
+
+        for id_meta, file_id in enumerate(sorted(found_meta), start=1):
+            if id_meta != file_id:
+                raise InconsistentDatasetError(
+                    "Meta file IDs contain slips"
+                )
 
     def _scan_dataset(self) -> None:
         """
         Register each dataset entry.
         """
-        for meta_file_path in self.path_to_raw_txt_data.glob("*_meta.json"):
-            article_id = get_article_id_from_filepath(meta_file_path)
-            self._storage[article_id] = from_meta(meta_file_path, Article(None, article_id))
         for raw_file_path in self.path_to_raw_txt_data.glob("*_raw.txt"):
-            article_id = get_article_id_from_filepath(raw_file_path)
-            self._storage[article_id] = from_raw(raw_file_path, self._storage[article_id])
+            article = from_raw(raw_file_path)
+            self._storage[article.article_id] = article
 
 
 
@@ -173,16 +176,10 @@ class TextProcessingPipeline(PipelineProtocol):
         """
         articles = self._corpus.get_articles()
         for article in articles.values():
-            raw_text = article.text
-            punctuation = r'!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~'
-            translator = str.maketrans('', '', punctuation)
-            cleaned = raw_text.lower().translate(translator)
-            cleaned = ' '.join(cleaned.split())
-            article._cleaned = cleaned
             to_cleaned(article)
             if self._analyzer:
-                conllu_list = self._analyzer.analyze([raw_text])
-                if conllu_list and len(conllu_list) > 0 and conllu_list[0] is not None:
+                conllu_list = self._analyzer.analyze([article.text])
+                if conllu_list and conllu_list[0]:
                     article.set_conllu_info(conllu_list[0])
                     self._analyzer.to_conllu(article)
 
