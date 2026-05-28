@@ -4,10 +4,13 @@ Pipeline for CONLL-U formatting.
 
 # pylint: disable=too-few-public-methods, unused-import, undefined-variable, too-many-nested-blocks, duplicate-code
 
-import os
 import pathlib
 import re
 from typing import cast
+
+import spacy_udpipe
+from spacy.tokens import Doc
+from spacy_conll import init_parser
 
 from core_utils.article.article import (
     Article,
@@ -21,9 +24,6 @@ from core_utils.pipeline import (
     PipelineProtocol,
     TreeNode,
 )
-import spacy_udpipe
-from spacy.tokens import Doc
-from spacy_conll import init_parser
 
 MODEL_PATH = PROJECT_ROOT / "lab_6_pipeline" / "assets" / "model"
 MODEL_NAME = "russian-syntagrus-ud-2.0-170801.udpipe"
