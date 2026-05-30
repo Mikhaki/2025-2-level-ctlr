@@ -9,8 +9,7 @@ import re
 from typing import cast
 
 import spacy_udpipe
-from spacy.tokens import Doc
-from spacy_conll import init_parser, ConllParser
+from spacy_conll import ConllParser, init_parser
 
 from core_utils.article.article import (
     Article,
@@ -90,12 +89,6 @@ class CorpusManager:
                 "Path does not lead to a directory."
             )
 
-        files = list(self.path_to_raw_txt_data.iterdir())
-        if not files:
-            raise EmptyDirectoryError(
-                "Directory is empty."
-                )
-
         found_raw = []
         found_meta = []
         for raw_path in self.path_to_raw_txt_data.glob("*_raw.txt"):
@@ -113,10 +106,6 @@ class CorpusManager:
                 )
             found_meta.append(int(meta_name.split("_")[0]))
 
-        if not found_meta or not found_raw:
-            raise EmptyDirectoryError(
-                "Directory is empty"
-            )
         if len(found_meta) != len(found_raw):
             raise InconsistentDatasetError(
                 "Number of meta and raw files is unequal"
