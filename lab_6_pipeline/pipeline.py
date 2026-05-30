@@ -89,6 +89,12 @@ class CorpusManager:
                 "Path does not lead to a directory."
             )
 
+        # files = list(self.path_to_raw_txt_data.iterdir())
+        # if not files:
+        #     raise EmptyDirectoryError(
+        #         "Directory is empty."
+        #         )
+
         found_raw = []
         found_meta = []
         for raw_path in self.path_to_raw_txt_data.glob("*_raw.txt"):
@@ -106,6 +112,10 @@ class CorpusManager:
                 )
             found_meta.append(int(meta_name.split("_")[0]))
 
+        if not found_meta or not found_raw:
+            raise EmptyDirectoryError(
+                "Directory is empty"
+            )
         if len(found_meta) != len(found_raw):
             raise InconsistentDatasetError(
                 "Number of meta and raw files is unequal"
@@ -220,7 +230,7 @@ class UDPipeAnalyzer(LibraryWrapper):
         nlp.add_pipe("conll_formatter", config=config, last=True)
         if not Doc.has_extension("conllu"):
             Doc.set_extension("conllu", getter=lambda doc: doc._.conll)
-        return nlp
+        return cast(Language, nlp)
 
 
     def analyze(self, texts: list[str]) -> list[str]:
