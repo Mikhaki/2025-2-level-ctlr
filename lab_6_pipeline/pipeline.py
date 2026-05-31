@@ -207,7 +207,9 @@ class UDPipeAnalyzer(LibraryWrapper):
         Returns:
             Language: Analyzer instance
         """
-        model_path = PROJECT_ROOT / "lab_6_pipeline" / "assets" / "model" / "russian-syntagrus-ud-2.0-170801.udpipe"
+        model_path = (PROJECT_ROOT /"lab_6_pipeline" /
+                      "assets" /"model" /
+                      "russian-syntagrus-ud-2.0-170801.udpipe")
 
         if not model_path.exists():
             raise FileNotFoundError(f"Model not found at {model_path}")
