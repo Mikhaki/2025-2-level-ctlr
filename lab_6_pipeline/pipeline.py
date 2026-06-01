@@ -122,8 +122,8 @@ class CorpusManager:
             )
 
 
-        for id, i in enumerate(sorted(found_raw), start=1):
-            if id != i:
+        for id_raw, file_id in enumerate(sorted(found_raw), start=1):
+            if id_raw != file_id:
                 raise InconsistentDatasetError(
                     "Meta file IDs contain slips"
                 )
@@ -133,7 +133,6 @@ class CorpusManager:
                 raise InconsistentDatasetError(
                     "Meta file IDs contain slips"
                 )
-        
 
     def _scan_dataset(self) -> None:
         """
