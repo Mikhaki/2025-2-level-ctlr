@@ -30,13 +30,13 @@ def main(corpus_path: Path, dist_path: Path) -> None:
     if not txt_files:
         raise ValueError(f"No .txt files found in {corpus_path}")
 
-    full_text = []
+    texts_list = []
     for txt_file in sorted(txt_files):
-        full_text.append(txt_file.read_text(encoding="utf-8"))
-    full_text = "\n".join(full_text)
+        texts_list.append(txt_file.read_text(encoding="utf-8"))
+    concatenated_text = "\n".join(texts_list)
 
     analyzer = UDPipeAnalyzer()
-    raw_result = analyzer.analyze(full_text)
+    raw_result = analyzer.analyze(concatenated_text)
 
     if isinstance(raw_result, list):
         temp = "\n".join(str(line) for line in raw_result)

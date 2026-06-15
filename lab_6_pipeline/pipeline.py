@@ -198,14 +198,19 @@ class UDPipeAnalyzer(LibraryWrapper):
         Returns:
             Language: Analyzer instance
         """
-        model_path = PROJECT_ROOT / "lab_6_pipeline" / "assets" / "model" / "russian-syntagrus-ud-2.0-170801.udpipe"
+        model_path = (
+            PROJECT_ROOT
+            / "lab_6_pipeline"
+            / "assets"
+            / "model"
+            / "russian-syntagrus-ud-2.0-170801.udpipe"
+            )
 
         if not model_path.exists():
             raise FileNotFoundError(f"Model not found at {model_path}")
 
         nlp = spacy_udpipe.load_from_path(lang="ru", path=str(model_path))
-        
-        # Increase the maximum text length (2 million characters, adjust if needed)
+
         nlp.max_length = 2_000_000   # or higher, e.g., 3_000_000
 
         config = {
