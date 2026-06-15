@@ -5,6 +5,13 @@ Final project implementation.
 # pylint: disable=unused-import
 from pathlib import Path
 
+import sys
+project_root = str(Path(__file__).parent.parent)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from lab_6_pipeline.pipeline import UDPipeAnalyzer
+
 
 def main(corpus_path: Path, dist_path: Path) -> None:
     """
@@ -14,9 +21,56 @@ def main(corpus_path: Path, dist_path: Path) -> None:
         corpus_path (Path): Path to folder containing text files.
         dist_path (Path): Path to folder for saving auto_annotated.conllu.
     """
-    result = None
-    assert result, "Result is None"
+    if not corpus_path.exists() or not corpus_path.is_dir():
+        raise FileNotFoundError(f"Corpus directory does not exist: {corpus_path}")
+
+    txt_files = list(corpus_path.glob("*.txt"))
+    if not txt_files:
+        raise ValueError(f"No .txt files found in {corpus_path}")
+
+    full_text = []
+    for txt_file in sorted(txt_files):
+        full_text.append(txt_file.read_text(encoding="utf-8"))
+    concatenated_text = "\n".join(full_text)
+
+    analyzer = UDPipeAnalyzer()
+    raw_result = analyzer.analyze(concatenated_text)
+
+    # Приводим результат к строке
+    if isinstance(raw_result, list):
+        # Объединяем списком, но убираем дублирующиеся пустые строки
+        temp = "\n".join(str(line) for line in raw_result)
+        # Заменяем 3 и более пустых строк на одну пустую
+        import re
+        conllu_result = re.sub(r'\n{3,}', '\n\n', temp)
+    else:
+        conllu_result = str(raw_result)
+
+    if not conllu_result.strip():
+        raise ValueError("UDPipe analysis returned empty result")
+
+    # Исправляем неуникальные sent_id
+    lines = conllu_result.splitlines()
+    new_lines = []
+    sent_counter = 1
+    for line in lines:
+        if line.startswith("# sent_id ="):
+            new_lines.append(f"# sent_id = {sent_counter}")
+            sent_counter += 1
+        else:
+            new_lines.append(line)
+    conllu_result = "\n".join(new_lines)
+
+    # Добавляем пустую строку после последнего предложения (требование валидатора)
+    conllu_result = conllu_result.rstrip() + "\n\n"
+
+    # Запись в файл
+    dist_path.mkdir(exist_ok=True, parents=True)
+    output_file = dist_path / "auto_annotated.conllu"
+    output_file.write_text(conllu_result, encoding="utf-8")
 
 
 if __name__ == "__main__":
-    main(Path(__file__).parent / "assets" / "articles", Path(__file__).parent / "dist")
+    corpus = Path(__file__).parent / "assets" / "articles"
+    dist = Path(__file__).parent / "dist"
+    main(corpus, dist)

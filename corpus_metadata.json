@@ -1,0 +1,115 @@
+{
+
+  "participants": [
+
+    "Есин Александр",
+
+    "Костусенко Полина",
+
+    "Михайлова Елена",
+
+    "Никитенко Даниил"
+
+  ],
+
+  "_notes": {
+
+    "student_name": "Имя и фамилия студента",
+
+    "resource_url": "Ссылка на ресурc, откуда были скачаны тексты",
+
+    "text_types": "Типы/жанры скачанных с ресурса текстов",
+
+    "texts_downloaded": "Количество скачанных текстов",
+
+    "total_tokens": "Общее количество токенов во всех скачанных текстах студента",
+
+    "tokens_analyzed": "Количество токенов, которые попали в ручную валидацию"
+
+  },
+
+  "corpus": [
+
+    {
+
+      "student_name": "Михайлова Елена",
+
+      "resource_url": "http://teatr-lib.ru/Library/",
+
+      "text_types": [
+
+        "современная драматургия"
+
+      ],
+
+      "texts_downloaded": 22,
+
+      "total_tokens": 4250,
+
+      "tokens_analyzed": 85
+
+    },
+
+    {
+
+      "student_name": "ФИ2",
+
+      "resource_url": "https://another-site.ru",
+
+      "text_types": [
+
+        "классическая драматургия"
+
+      ],
+
+      "texts_downloaded": 15,
+
+      "total_tokens": 3800,
+
+      "tokens_analyzed": 92
+
+    },
+
+    {
+
+      "student_name": "ФИ2",
+
+      "resource_url": "https://another-site.ru",
+
+      "text_types": [
+
+        "классическая драматургия"
+
+      ],
+
+      "texts_downloaded": 15,
+
+      "total_tokens": 3800,
+
+      "tokens_analyzed": 92
+
+    },
+
+    {
+
+      "student_name": "ФИ2",
+
+      "resource_url": "https://another-site.ru",
+
+      "text_types": [
+
+        "классическая драматургия"
+
+      ],
+
+      "texts_downloaded": 15,
+
+      "total_tokens": 3800,
+
+      "tokens_analyzed": 92
+
+    }
+
+  ]
+
+}
