@@ -2,15 +2,17 @@
 Final project implementation.
 """
 
-# pylint: disable=unused-import
+import sys
 from pathlib import Path
 
-import sys
-project_root = str(Path(__file__).parent.parent)
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
+# pylint: disable=unused-import
 from lab_6_pipeline.pipeline import UDPipeAnalyzer
+
+PROJECT_ROOT = str(Path(__file__).parent.parent)
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+
 
 
 def main(corpus_path: Path, dist_path: Path) -> None:
@@ -31,16 +33,13 @@ def main(corpus_path: Path, dist_path: Path) -> None:
     full_text = []
     for txt_file in sorted(txt_files):
         full_text.append(txt_file.read_text(encoding="utf-8"))
-    concatenated_text = "\n".join(full_text)
+    full_text = "\n".join(full_text)
 
     analyzer = UDPipeAnalyzer()
-    raw_result = analyzer.analyze(concatenated_text)
+    raw_result = analyzer.analyze(full_text)
 
-    # Приводим результат к строке
     if isinstance(raw_result, list):
-        # Объединяем списком, но убираем дублирующиеся пустые строки
         temp = "\n".join(str(line) for line in raw_result)
-        # Заменяем 3 и более пустых строк на одну пустую
         import re
         conllu_result = re.sub(r'\n{3,}', '\n\n', temp)
     else:
@@ -49,7 +48,6 @@ def main(corpus_path: Path, dist_path: Path) -> None:
     if not conllu_result.strip():
         raise ValueError("UDPipe analysis returned empty result")
 
-    # Исправляем неуникальные sent_id
     lines = conllu_result.splitlines()
     new_lines = []
     sent_counter = 1
@@ -61,10 +59,8 @@ def main(corpus_path: Path, dist_path: Path) -> None:
             new_lines.append(line)
     conllu_result = "\n".join(new_lines)
 
-    # Добавляем пустую строку после последнего предложения (требование валидатора)
     conllu_result = conllu_result.rstrip() + "\n\n"
 
-    # Запись в файл
     dist_path.mkdir(exist_ok=True, parents=True)
     output_file = dist_path / "auto_annotated.conllu"
     output_file.write_text(conllu_result, encoding="utf-8")
