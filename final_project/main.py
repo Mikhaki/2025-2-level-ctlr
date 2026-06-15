@@ -13,6 +13,8 @@ if PROJECT_ROOT not in sys.path:
 # pylint: disable=wrong-import-position
 from lab_6_pipeline.pipeline import UDPipeAnalyzer
 
+
+
 def read_corpus_texts(corpus_path: Path) -> list[str]:
     """
     Read all .txt files from corpus folder.
