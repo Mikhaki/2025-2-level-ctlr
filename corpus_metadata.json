@@ -38,75 +38,75 @@
 
       "text_types": [
 
-        "современная драматургия"
+        "биографии", "очерки", "публицистика"
 
       ],
 
-      "texts_downloaded": 22,
+      "texts_downloaded": 20,
 
-      "total_tokens": 4250,
+      "total_tokens": 21333,
 
-      "tokens_analyzed": 85
+      "tokens_analyzed": 377
 
     },
 
     {
 
-      "student_name": "ФИ2",
+      "student_name": "Есин Александр",
 
-      "resource_url": "https://another-site.ru",
+      "resource_url": "https://theatre-library.ru/",
 
       "text_types": [
 
-        "классическая драматургия"
+        "современная драматургия", "современная поэзия"
 
       ],
 
-      "texts_downloaded": 15,
+      "texts_downloaded": 20,
 
-      "total_tokens": 3800,
+      "total_tokens": 81357,
 
-      "tokens_analyzed": 92
+      "tokens_analyzed": 505
 
     },
 
     {
 
-      "student_name": "ФИ2",
+      "student_name": "Костусенко Полина",
 
-      "resource_url": "https://another-site.ru",
+      "resource_url": "https://ilibrary.ru/",
 
       "text_types": [
 
-        "классическая драматургия"
+        "классическая драматургия", "классическая поэзия"
 
       ],
 
-      "texts_downloaded": 15,
+      "texts_downloaded": 20,
 
-      "total_tokens": 3800,
+      "total_tokens": 29140,
 
-      "tokens_analyzed": 92
+      "tokens_analyzed": 358
 
     },
 
     {
 
-      "student_name": "ФИ2",
+      "student_name": "Никитенко Даниил",
 
-      "resource_url": "https://another-site.ru",
+      "resource_url": "https://samlib.ru/r/",
 
       "text_types": [
 
-        "классическая драматургия"
+        "современная проза", "фанфикшн"
 
       ],
 
-      "texts_downloaded": 15,
+      "texts_downloaded": 20,
 
-      "total_tokens": 3800,
+      "total_tokens": 200752,
 
-      "tokens_analyzed": 92
+      "tokens_analyzed": 362
 
     }
 
